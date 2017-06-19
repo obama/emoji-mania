@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+
+  "name": "Emoji Mania",
+  "description": "This extension adds a twitter-like emoji selector to every text input on every website!",
+  "version": "1.0",
+  "author": "Alexander Berdowski",
+  "icons": {
+	   "72": "icon.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+         "<all_urls>"
+      ],
+      "css": ["css/style.css"],
+      "js":  ["emojidata.js", "js/inject.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "storage"
+  ]
+}
