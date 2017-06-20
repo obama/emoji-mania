@@ -1,9 +1,4 @@
 ﻿document.body.onload = function () {
-  var inputs = document.querySelectorAll('textarea, input[type=text], input:not([type]), input[type=search]');
-  /*if (inputs.length == 0) {
-    setTimeout(() => { document.body.onload() }, 1000);
-    return;
-  }*/
   emojiHistory = []
   emojiPanelOpen = false;
   emojiSearch = '';
@@ -13,8 +8,6 @@
       emojiHistory = items.history;
   });
 
-  // inject emoji panel only if there actually are inputs or textareas in the page
-  if (inputs.length > 0) {
     var smolBtn = document.createElement('button'); // the smol circle button that open the panel
     smolBtn.setAttribute('class', 'btn-floating blue');
     smolBtn.id = 'emojiSelectorSmallButton';
@@ -80,26 +73,39 @@
       closeButton.onclick = () => { hideEmojiPanel(); };
     }
 
-  }
-  else return;//alert('no inputs'); // exit
-
-  // add onlick events to all textual input fields
-  for (let input of inputs) {
-    input.onclick = () => showEmojiButton(input);
-  }
-  //else alert('no inputs')
+  // register onclick event to input fields
+  addInputEvents();
 
   // when clicking somewhere else hide the panel
   el.onmousedown = (e) => e.stopPropagation();
   smolBtn.onmousedown = (e) => e.stopPropagation();
   window.addEventListener('mousedown', (e) => { hideEmojiPanel(); hideEmojiButton(); });
 
+  // observe for DOM changes
+  var observer = new MutationObserver(function(mutations) {
+    addInputEvents();
+    /*mutations.forEach(function(mutation) {
+      alert(mutation.type);
+    });*/
+  });
+  // Konfiguration des Observers: alles melden - Änderungen an Daten, Kindelementen und Attributen
+  var config = { attributes: true, childList: true, characterData: false };
+  // eigentliche Observierung starten und Zielnode und Konfiguration übergeben
+  observer.observe(document.body, config);
 
 };
 
 /* ----------------------------------------------------------------------------
  *
  * --------------------------------------------------------------------------*/
+
+function addInputEvents() {
+  // add onlick events to all textual input fields
+  var inputs = document.querySelectorAll('textarea, input[type=text], input:not([type]), input[type=search]');
+  for (let input of inputs) {
+    input.onclick = () => showEmojiButton(input);
+  }
+}
 
 function createEmojiList(search) {
   //alert(Object.entries(emojiSelectorEmojiData.emojis))

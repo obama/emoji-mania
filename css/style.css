@@ -3,7 +3,7 @@
 }
 
 
-#emojiSelector, #emojiSelector * {
+#emojiSelector, #emojiSelector *, #emojiSelectorSmallButton {
 	all: initial;
 }
 
@@ -196,22 +196,22 @@
 #emojiSelectorSmallButton.btn-floating {
   outline: 0;
 	display: inline-block;
-color: #fff;
-position: absolute;
-top: 0;
-left: 0;
-overflow: hidden;
-z-index: 1;
-width: 40px;
-height: 40px;
-line-height: 40px;
-padding: 0;
-background-color: #26a69a;
-border-radius: 50%;
-transition: filter .3s, transform .3s, visibility 0.3s;
-cursor: pointer;
-vertical-align: middle;
-z-index: 99999999999999999999999999999999999999999999999999999999999999999999999;
+	color: #fff;
+	position: absolute;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+	z-index: 1;
+	width: 40px;
+	height: 40px;
+	line-height: 40px;
+	padding: 0;
+	background-color: #26a69a;
+	border-radius: 50%;
+	transition: filter .3s, transform .3s, visibility 0.3s;
+	cursor: pointer;
+	vertical-align: middle;
+	z-index: 99999999999999999999999999999999999999999999999999999999999999999999999;
 }
 
 #emojiSelectorSmallButton.btn-floating.hide {
