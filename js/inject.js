@@ -2,6 +2,7 @@
   emojiHistory = []
   emojiPanelOpen = false;
   emojiSearch = '';
+  emojiCaretPos = 0; // fix for contenteditable=true, they lose caret pos after changing focused element
 
   chrome.storage.local.get('history', (items) => {
     if (items.history != null && items.history.length > 0)
@@ -101,7 +102,7 @@
 
 function addInputEvents() {
   // add onlick events to all textual input fields
-  var inputs = document.querySelectorAll('textarea, input[type=text], input:not([type]), input[type=search]');
+  var inputs = document.querySelectorAll('textarea, input[type=text], input:not([type]), input[type=search], [contenteditable=true]');
   for (let input of inputs) {
     input.onclick = () => showEmojiButton(input);
   }
@@ -220,6 +221,7 @@ function showEmojiPanel(input) {
   el.style.top  = newY + 'px';
   el.style.left = pos.left + 'px';
   emojiPanelOpen = input;
+  emojiCaretPos = getCaretCharacterOffsetWithin(input);
   createRecentUsedList(emojiHistory, emojiSearch);
   //document.querySelector('#emojiSelector input[type=search]').focus() // twitter like behaviour. <- make this only when the dialog doesnt open on click but maybe after a face button has been clicked?
 }
@@ -230,6 +232,14 @@ function hideEmojiPanel() {
   if (emojiPanelOpen != false) {
     emojiPanelOpen.selectionEnd = emojiPanelOpen.selectionStart; // prevent input from being selected (blue)
     emojiPanelOpen.focus();
+    if (emojiPanelOpen.isContentEditable) { // restore caret pos for contenteditable=true nodes
+      var range = document.createRange();
+      var sel = window.getSelection();
+      range.setStart(emojiPanelOpen.childNodes[0], emojiCaretPos);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
   }
   emojiPanelOpen = false;
 }
@@ -269,11 +279,17 @@ function makeButtonsClickable(parent) {
   var emojiButtons = parent.querySelectorAll('button.pick');
   for (let x of emojiButtons) {
     x.onclick = (e) => {
-      //alert(emojiPanelOpen)
       var e = emojiPanelOpen; // global var for currently focused input
       var t = e.selectionStart; // when adding a smilie the e.selectionStart jumps to the end instead of staying were it was
-      e.value = e.value.substring(0, t) + x.innerHTML + e.value.substring(t, e.value.length);
-      e.selectionStart = t + x.innerHTML.length;
+      if (e.isContentEditable) {
+        t = emojiCaretPos; // retrieve saved caret position (focusing other element loses caretpos with contenteditable=true)
+        e.innerText = e.innerText.substring(0, t) + x.innerHTML + e.innerText.substring(t, e.innerText.length);
+        emojiCaretPos += x.innerHTML.length;
+      }
+      else {
+        e.value = e.value.substring(0, t) + x.innerHTML + e.value.substring(t, e.value.length);
+        e.selectionStart = t + x.innerHTML.length;
+      }
 
       if (emojiHistory.indexOf(x.innerHTML) >= 0) // if already in list remove and put to front
         emojiHistory.splice(emojiHistory.indexOf(x.innerHTML), 1);
@@ -352,4 +368,28 @@ function removeClass(el, className) {
     var reg = new RegExp('(\\s|^)' + className + '(\\s|$)')
     el.className=el.className.replace(reg, ' ')
   }
+}
+
+function getCaretCharacterOffsetWithin(element) {
+  var caretOffset = 0;
+  var doc = element.ownerDocument || element.document;
+  var win = doc.defaultView || doc.parentWindow;
+  var sel;
+  if (typeof win.getSelection != "undefined") {
+    sel = win.getSelection();
+    if (sel.rangeCount > 0) {
+      var range = win.getSelection().getRangeAt(0);
+      var preCaretRange = range.cloneRange();
+      preCaretRange.selectNodeContents(element);
+      preCaretRange.setEnd(range.endContainer, range.endOffset);
+      caretOffset = preCaretRange.toString().length;
+    }
+  } else if ((sel = doc.selection) && sel.type != "Control") {
+    var textRange = sel.createRange();
+    var preCaretTextRange = doc.body.createTextRange();
+    preCaretTextRange.moveToElementText(element);
+    preCaretTextRange.setEndPoint("EndToEnd", textRange);
+    caretOffset = preCaretTextRange.text.length;
+  }
+  return caretOffset;
 }
